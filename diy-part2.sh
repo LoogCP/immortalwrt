@@ -17,15 +17,15 @@
 # 删除 feeds 中的 v2ray-geodata 包（适用于 openwrt-22.03 和 master）
 # rm -rf feeds/packages/net/v2ray-geodata
 
-# 克隆 mosdns 和 v2ray-geodata 仓库
-# git clone https://github.com/sbwml/luci-app-mosdns -b v5 package/mosdns
-# git clone https://github.com/sbwml/v2ray-geodata package/v2ray-geodata
+# 添加argon、infinityfreedom和alpha主题
+git clone https://github.com/jerrykuku/luci-theme-argon.git package/luci-theme-argon
+git clone https://github.com/jerrykuku/luci-app-argon-config.git package/luci-app-argon-config
+git clone https://github.com/xiaoqingfengATGH/luci-theme-infinityfreedom.git package/luci-theme-infinityfreedom
+git clone https://github.com/derisamedia/luci-theme-alpha.git package/luci-theme-alpha
 
-# 克隆 coolsnowwolf/luci 仓库
-# git clone https://github.com/coolsnowwolf/luci.git
 
 # 复制 luci-app-airplay2 文件夹到 feeds/luci/applications/
 # cp -r luci/applications/luci-app-airplay2/ feeds/luci/applications/luci-app-airplay2/
 
 # Modify default IP
-#sed -i 's/192.168.1.1/192.168.50.5/g' package/base-files/files/bin/config_generate
+sed -i 's/192.168.1.1/10.10.1.1/g' package/base-files/files/bin/config_generate
