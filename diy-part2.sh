@@ -26,6 +26,9 @@ sed -i 's/\/bin\/ash/\/usr\/bin\/fish/g' package/base-files/files/etc/passwd
 rm -rf  feeds/luci/applications/luci-app-homeproxy
 git clone -b dev https://github.com/immortalwrt/homeproxy.git package/homrproxy
 
+#添加pushbot
+git clone https://github.com/gaoyaxuan/luci-app-pushbot.git package/luci-app-pushbot
+
 # 添加argon、infinityfreedom和alpha主题
 git clone https://github.com/jerrykuku/luci-theme-argon.git package/luci-theme-argon
 git clone https://github.com/jerrykuku/luci-app-argon-config.git package/luci-app-argon-config
