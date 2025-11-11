@@ -23,11 +23,11 @@ sed -i 's/\/bin\/ash/\/usr\/bin\/fish/g' package/base-files/files/etc/passwd
 # rm -rf feeds/packages/net/v2ray-geodata
 
 #切换dev分支hp
-rm -rf  feeds/luci/applications/luci-app-homeproxy
-git clone -b dev https://github.com/immortalwrt/homeproxy.git package/homrproxy
+#rm -rf  feeds/luci/applications/luci-app-homeproxy
+git clone -b dev #https://github.com/immortalwrt/homeproxy.git package/homrproxy
 
 #添加pushbot
-git clone https://github.com/gaoyaxuan/luci-app-pushbot.git package/luci-app-pushbot
+#git clone https://github.com/gaoyaxuan/luci-app-pushbot.git package/luci-app-pushbot
 
 # 添加argon、infinityfreedom和alpha主题
 git clone https://github.com/jerrykuku/luci-theme-argon.git package/luci-theme-argon
