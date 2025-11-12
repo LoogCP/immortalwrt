@@ -24,10 +24,10 @@ sed -i 's/\/bin\/ash/\/usr\/bin\/fish/g' package/base-files/files/etc/passwd
 
 #切换dev分支hp
 #rm -rf  feeds/luci/applications/luci-app-homeproxy
-git clone -b dev #https://github.com/immortalwrt/homeproxy.git package/homrproxy
+git clone -b dev https://github.com/immortalwrt/homeproxy.git package/homrproxy
 
 #添加pushbot
-#git clone https://github.com/gaoyaxuan/luci-app-pushbot.git package/luci-app-pushbot
+git clone https://github.com/gaoyaxuan/luci-app-pushbot.git package/luci-app-pushbot
 
 # 添加argon、infinityfreedom和alpha主题
 git clone https://github.com/jerrykuku/luci-theme-argon.git package/luci-theme-argon
@@ -39,5 +39,3 @@ git clone https://github.com/derisamedia/luci-theme-alpha.git package/luci-theme
 # 复制 luci-app-airplay2 文件夹到 feeds/luci/applications/
 # cp -r luci/applications/luci-app-airplay2/ feeds/luci/applications/luci-app-airplay2/
 
-# Modify default IP
-sed -i 's/192.168.1.1/10.10.1.1/g' package/base-files/files/bin/config_generate
