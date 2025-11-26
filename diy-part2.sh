@@ -10,22 +10,28 @@
 # Description: OpenWrt DIY script part 2 (After Update feeds)
 #
 
-# 删除 golang 语言包
-# find ./ | grep Makefile | grep v2ray-geodata | xargs rm -f
-# find ./ | grep Makefile | grep mosdns | xargs rm -f
-
-# 删除 feeds 中的 v2ray-geodata 包（适用于 openwrt-22.03 和 master）
-# rm -rf feeds/packages/net/v2ray-geodata
-
-# 克隆 mosdns 和 v2ray-geodata 仓库
-# git clone https://github.com/sbwml/luci-app-mosdns -b v5 package/mosdns
-# git clone https://github.com/sbwml/v2ray-geodata package/v2ray-geodata
-
-# 克隆 coolsnowwolf/luci 仓库
-# git clone https://github.com/coolsnowwolf/luci.git
-
-# 复制 luci-app-airplay2 文件夹到 feeds/luci/applications/
-# cp -r luci/applications/luci-app-airplay2/ feeds/luci/applications/luci-app-airplay2/
-
 # Modify default IP
-#sed -i 's/192.168.1.1/192.168.50.5/g' package/base-files/files/bin/config_generate
+sed -i 's/192.168.1.1/10.10.1.1/g' package/base-files/files/bin/config_generate
+
+#修改homeproxy
+rm -rf  feeds/luci/applications/luci-app-homeproxy
+git clone -b dev https://github.com/immortalwrt/homeproxy.git package/homrproxy  #使用immortalwrt/dev分支
+#添加pushbot
+git clone https://github.com/gaoyaxuan/luci-app-pushbot.git package/luci-app-pushbot
+
+# 更改默认 Shell 为 fish
+sed -i 's/\/bin\/ash/\/usr\/bin\/fish/g' package/base-files/files/etc/passwd
+
+# x86 型号只显示 CPU 型号
+sed -i 's/${g}.*/${a}${b}${c}${d}${e}${f}${hydrid}/g' package/emortal/autocore/files/x86/autocore
+
+# 修改本地时间格式
+sed -i 's/os.date()/os.date("%a %Y-%m-%d %H:%M:%S")/g' package/emortal/autocore/files/*/index.htm
+
+# 修改版本为编译日期
+date_version=$(date +"%y.%m.%d")
+orig_version=$(cat "package/emortal/default-settings/files/99-default-settings" | grep DISTRIB_REVISION= | awk -F "'" '{print $2}')
+sed -i "s/${orig_version}/R${date_version} by LoogCP/g" package/emortal/default-settings/files/99-default-settings
+
+./scripts/feeds install -a -f
+
