@@ -1,0 +1,110 @@
+# Build ImmortalWrt including dae and luci-app-dae
+name: Build ImmortalWrt (with dae)
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build-immortalwrt:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    env:
+      TZ: "UTC"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential ccache ecj fastjar file gawk \
+            libncurses5-dev libncursesw5-dev zlib1g-dev libssl-dev subversion \
+            unzip python3 python3-distutils python3-pip git mercurial
+
+      - name: Add swap (optional, helps avoid OOM)
+        if: runner.os == 'Linux'
+        run: |
+          sudo fallocate -l 4G /swapfile || sudo dd if=/dev/zero of=/swapfile bs=1M count=4096
+          sudo chmod 600 /swapfile
+          sudo mkswap /swapfile
+          sudo swapon /swapfile
+          sudo swapon --show
+
+      - name: Cache dl and staging_dir (speeds up repeated builds)
+        uses: actions/cache@v4
+        with:
+          path: |
+            dl
+            feeds
+            staging_dir
+            build_dir
+          key: ${{ runner.os }}-immortalwrt-${{ hashFiles('**/feeds.conf*', '.config') }}
+          restore-keys: |
+            ${{ runner.os }}-immortalwrt-
+
+      - name: Add dae and luci-app-dae from official ImmortalWrt (if not present)
+        run: |
+          # If your repo already contains package/community/dae and luci-app-dae, this step is harmless.
+          mkdir -p package/community
+          git clone --depth 1 https://github.com/immortalwrt/immortalwrt.git /tmp/immortal-official || true
+          # Copy folders named dae or luci-app-dae (preserves if you already have them)
+          find /tmp/immortal-official -maxdepth 6 -type d \( -name 'dae' -o -name 'luci-app-dae' \) -print0 \
+            | xargs -0 -I{} bash -lc 'dst="package/community/$(basename "{}")"; if [ ! -d "$dst" ]; then cp -a "{}" "$dst"; fi'
+          ls -la package/community || true
+
+      - name: Prepare feeds (update & install)
+        run: |
+          ./scripts/feeds update -a
+          ./scripts/feeds install -a
+
+      - name: Copy or generate .config
+        run: |
+          if [ -f .github/configs/default.config ]; then
+            echo "Using .github/configs/default.config"
+            cp .github/configs/default.config .config
+          else
+            echo "No custom config found at .github/configs/default.config; running make defconfig"
+            make defconfig
+          fi
+
+      - name: Ensure dae packages are enabled in .config
+        run: |
+          set -e
+          # 下面的 CONFIG 名称依据包实际 Makefile 的 PACKAGE 名称，若不同请替换成正确的 CONFIG_KEY
+          # 通常 luci-app 包对应的 config 名称是 CONFIG_PACKAGE_<package>=y 或 CONFIG_PACKAGE_<package>=m
+          if ! grep -q "^CONFIG_PACKAGE_dae=" .config 2>/dev/null; then
+            echo "CONFIG_PACKAGE_dae=y" >> .config
+          else
+            sed -i 's/^CONFIG_PACKAGE_dae=.*/CONFIG_PACKAGE_dae=y/' .config
+          fi
+          if ! grep -q "^CONFIG_PACKAGE_luci-app-dae=" .config 2>/dev/null; then
+            echo "CONFIG_PACKAGE_luci-app-dae=y" >> .config
+          else
+            sed -i 's/^CONFIG_PACKAGE_luci-app-dae=.*/CONFIG_PACKAGE_luci-app-dae=y/' .config
+          fi
+          # Re-apply defconfig 以保证依赖项生成
+          make defconfig
+
+      - name: Compile ImmortalWrt
+        run: |
+          # 如遇 OOM，请把 -j$(nproc) 改为 -j2 等
+          make -j$(nproc) V=s 2>&1 | tee build.log
+
+      - name: Upload build log
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: build.log
+
+      - name: Upload firmware and packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware-artifacts
+          path: |
+            bin/targets/**
+            bin/packages/**
+            bin/targets || true
